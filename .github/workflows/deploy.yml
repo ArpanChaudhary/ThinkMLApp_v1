@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Full Stack App
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,16 +17,42 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Dependencies
+      - name: Install Frontend Dependencies
         run: npm install
 
-      - name: Build
+      - name: Build Frontend
         run: npm run build
         env:
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
-      - name: Deploy
+      - name: Deploy Frontend to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
-          branch: gh-pages 
+          branch: gh-pages
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Deploy Backend to GitHub Pages
+        run: |
+          cd backend
+          python app.py
+        env:
+          FLASK_ENV: production
+          FLASK_APP: app.py
+          DATABASE_URL: ${{ secrets.DATABASE_URL }} 
